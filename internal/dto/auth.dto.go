@@ -13,3 +13,7 @@ type LoginDTO struct {
 type PinDTO struct {
 	Pin string `json:"pin" form:"pin"`
 }
+
+type PasswordDTO struct {
+	Password string `json:"password" form:"password"`
+}
