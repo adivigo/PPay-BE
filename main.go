@@ -40,6 +40,7 @@ func main() {
 	routes.TopupRoute(r)
 	routes.TransferRoute(r)
 	routes.AuthRoutes(r)
+	routes.TransactionRoute(r)
 	routes.ChangePasswordRoutes(r)
 	r.Run()
 }

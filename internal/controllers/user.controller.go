@@ -275,7 +275,7 @@ func GetUserByID(c *gin.Context) {
 
 	// Query only required fields
 	if err := initializers.DB.Model(&models.User{}).
-		Select("email, image, fullname, phone").
+		Select("id, email, image, fullname, phone").
 		Where("id = ? AND is_deleted = ?", id, false).
 		First(&userSummary).Error; err != nil {
 		response.NotFound("User not found", nil)
