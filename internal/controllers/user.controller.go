@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pilinux/argon2"
+	"github.com/go-playground/validator/v10"
 	"github.com/ppay/internal/dto"
 	"github.com/ppay/internal/initializers"
 	"github.com/ppay/internal/models"
@@ -18,23 +18,91 @@ import (
 
 // Create User and Wallet
 func CreateUser(c *gin.Context) {
-	var input struct {
-		Fullname string  `json:"fullname"`
-		Email    string  `json:"email" binding:"required,email"`
-		Password string  `json:"password" binding:"required,min=6"`
-		Pin      *string `json:"pin"`
-		Phone    *string `json:"phone"`
-		Image    *string `json:"image"`
-	}
+	response := lib.NewResponse(c)
+	var input dto.CreatUserDTO
+	file, _ := c.FormFile("image")
 
 	// Validate input
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	if err := c.ShouldBind(&input); err != nil {
+		// Split the error string into individual validation errors
+		validationErrors, ok := err.(validator.ValidationErrors)
+		if !ok {
+			response.BadRequest("Invalid input", err.Error())
+			return
+		}
+
+		for _, fieldError := range validationErrors {
+			switch fieldError.Field() {
+			case "Email":
+				if fieldError.Tag() == "required" {
+					response.BadRequest("Email is required", nil)
+					return
+				} else if fieldError.Tag() == "email" {
+					response.BadRequest("Invalid email format", nil)
+					return
+				}
+			case "Password":
+				if fieldError.Tag() == "required" {
+					response.BadRequest("Password is required", nil)
+					return
+				} else if fieldError.Tag() == "min" {
+					response.BadRequest("Password must be at least 6 characters long", nil)
+					return
+				}
+			case "Phone":
+				if fieldError.Tag() == "required" {
+					response.BadRequest("Phone is required", nil)
+					return
+				}
+			case "Pin":
+				if fieldError.Tag() == "min" {
+					response.BadRequest("Pin must be at least 6 characters long", nil)
+					return
+				} else if fieldError.Tag() == "max" {
+					response.BadRequest("Pin must be no more than 6 characters long", nil)
+					return
+				}
+			default:
+				response.BadRequest("Invalid input", fieldError.Error())
+				return
+			}
+		}
 	}
 
 	if input.Password != "" {
-		input.Password, _ = argon2.CreateHash(input.Password, "", argon2.DefaultParams)
+		hasher := lib.GenerateHash(input.Password)
+		input.Password = hasher
+	}
+	if input.Pin != nil {
+		hashPin := lib.GenerateHash(*input.Pin)
+		input.Pin = &hashPin
+	}
+
+	if _, err := GetUserByEmail(input.Email); err == nil {
+		response.BadRequest("Email is already registered", nil)
+		return
+	}
+
+	if _, err := GetUserByPhone(*input.Phone); err == nil {
+		response.BadRequest("Phone is already registered", nil)
+		return
+	}
+
+	if file != nil {
+		allowedExts := []string{".jpg", ".jpeg", ".png"}
+		maxSize := int64(2 << 20) // 2 MB
+		uploadDir := "public/images"
+
+		imagePath, err := lib.UploadImage(c, file, allowedExts, maxSize, uploadDir)
+		if err != nil {
+			response.BadRequest("Failed to upload image", err.Error())
+			return
+		}
+
+		input.Image = &imagePath
+	} else {
+		imageDefault := ""
+		input.Image = &imageDefault
 	}
 
 	// Mulai transaksi
@@ -42,7 +110,7 @@ func CreateUser(c *gin.Context) {
 
 	// Buat User
 	user := models.User{
-		Fullname: input.Fullname,
+		Fullname: *input.Fullname,
 		Email:    input.Email,
 		Password: input.Password,
 		Pin:      input.Pin,
@@ -71,11 +139,14 @@ func CreateUser(c *gin.Context) {
 	// Commit transaksi
 	tx.Commit()
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "User and wallet created successfully",
-		"user":    user,
-		"wallet":  wallet,
+	response.Created("Success create user", dto.UserSummaryDTO{
+		Id:       int(user.ID),
+		Email:    user.Email,
+		Fullname: user.Fullname,
+		Phone:    user.Phone,
+		Image:    user.Image,
 	})
+
 }
 
 // Get All Users

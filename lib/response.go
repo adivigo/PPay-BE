@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -56,6 +57,7 @@ func (r *Responder) Created(message string, data interface{}) {
 }
 
 func (r *Responder) BadRequest(message string, err interface{}) {
+	fmt.Printf("BadRequest invoked - Message: %s, Error: %+v\n", message, err)
 	r.C.JSON(http.StatusBadRequest, Response{
 		Status:  http.StatusBadRequest,
 		Message: message,

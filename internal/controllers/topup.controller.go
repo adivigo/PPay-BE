@@ -32,7 +32,7 @@ func Topup(c *gin.Context) {
 	}
 
 	// Validate input
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBind(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data", "details": err.Error()})
 		return
 	}
@@ -66,6 +66,15 @@ func Topup(c *gin.Context) {
 	if err := tx.Create(&topUp).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create top-up transaction", "details": err.Error()})
+		return
+	}
+
+	var wallet models.Wallet
+	wallet.Balance += input.Amount
+	wallet.UserID = uint(id)
+	if err := tx.Save(&wallet).Error; err != nil {
+		tx.Rollback()
+		response.InternalServerError("Failed to update wallet balance", err.Error())
 		return
 	}
 

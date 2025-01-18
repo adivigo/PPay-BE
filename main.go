@@ -20,8 +20,10 @@ func main() {
 		AllowHeaders:    []string{"Authorization", "Content-Type"},
 		AllowMethods:    []string{"POST", "GET", "PATCH", "DELETE"},
 	}))
+	r.Static("/public/images", "public/images")
 	routes.UserRoutes(r)
 	routes.TopupRoute(r)
+	routes.TransferRoute(r)
 	routes.AuthRoutes(r)
 	r.Run()
 }

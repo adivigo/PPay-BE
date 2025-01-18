@@ -19,3 +19,12 @@ type UpdateUserRequest struct {
 	Image     *string   `json:"image" form:"image"`
 	UpdatedAt time.Time `json:"updatedAt" form:"updatedAt"`
 }
+
+type CreatUserDTO struct {
+	Fullname *string `json:"fullname" form:"fullname"`
+	Email    string  `json:"email" form:"email" binding:"required,email"`
+	Password string  `json:"password" form:"password" binding:"required,min=6"`
+	Pin      *string `json:"pin" form:"pin" binding:"omitempty,min=6,max=6"`
+	Phone    *string `json:"phone" form:"phone" binding:"required"`
+	Image    *string `json:"image"`
+}
