@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"net/http"
 	"strconv"
@@ -166,7 +167,7 @@ func GetUserByID(c *gin.Context) {
 		response.Unauthorized("Unauthorized", nil)
 		return
 	}
-
+	log.Println(userId)
 	id, ok := userId.(int)
 	if !ok {
 		response.InternalServerError("Failed to parse user ID from token", nil)
@@ -178,7 +179,7 @@ func GetUserByID(c *gin.Context) {
 
 	// Query only required fields
 	if err := initializers.DB.Model(&models.User{}).
-		Select("email, image, fullname, phone").
+		Select("id, email, image, fullname, phone").
 		Where("id = ? AND is_deleted = ?", id, false).
 		First(&userSummary).Error; err != nil {
 		response.NotFound("User not found", nil)
@@ -259,6 +260,7 @@ func UpdateUser(c *gin.Context) {
 		Id:       int(user.ID),
 		Fullname: user.Fullname,
 		Phone:    user.Phone,
+		Email:    user.Email,
 	})
 }
 
