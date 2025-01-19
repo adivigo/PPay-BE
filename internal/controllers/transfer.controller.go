@@ -48,7 +48,7 @@ func Transfer(c *gin.Context) {
 	transaction := models.Transaction{
 		UserID:          uint(id),
 		Amount:          input.Amount,
-		TransactionType: "top_up",
+		TransactionType: "transfer",
 	}
 
 	if err := tx.Create(&transaction).Error; err != nil {
@@ -76,7 +76,7 @@ func Transfer(c *gin.Context) {
 
 	if err := tx.Create(&transfer).Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create transfer transaction", "details": err.Error()})
+		response.InternalServerError("Failed to create transfer transaction", err.Error())
 		return
 	}
 
@@ -103,12 +103,12 @@ func Transfer(c *gin.Context) {
 	// Commit the transaction
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit database transaction", "details": err.Error()})
+		response.InternalServerError("Failed to commit database transaction", err.Error())
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message": "Top-up transaction created successfully",
+		"message": "Transfer transaction created successfully",
 		"transaction": map[string]interface{}{
 			"id":         transaction.ID,
 			"userId": userId,
