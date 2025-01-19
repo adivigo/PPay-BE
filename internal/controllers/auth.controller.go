@@ -11,6 +11,16 @@ import (
 	"github.com/ppay/lib"
 )
 
+// Auth godoc
+// @Schemes
+// @Description Registrasi Account
+// @Tags Auth
+// @Accept x-www-form-urlencoded
+// @Produce json
+// @Param email formData string true "Input Email"
+// @Param password formData string true "Input Password"
+// @Success 201 {object} dto.RegisterDTO
+// @Router /auth/register [post]
 func Register(c *gin.Context) {
 	response := lib.NewResponse(c)
 	var input dto.RegisterDTO
@@ -72,6 +82,16 @@ func Register(c *gin.Context) {
 	response.Created("Success register user", nil)
 }
 
+// Auth godoc
+// @Schemes
+// @Description Login Account
+// @Tags Auth
+// @Accept x-www-form-urlencoded
+// @Produce json
+// @Param email formData string true "Input Email"
+// @Param password formData string true "Input Password"
+// @Success 200 {object} dto.LoginDTO
+// @Router /auth/login [post]
 func Login(c *gin.Context) {
 	response := lib.NewResponse(c)
 	var input dto.LoginDTO

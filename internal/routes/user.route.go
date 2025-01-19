@@ -11,6 +11,7 @@ func UserRoutes(router *gin.Engine) {
 	{
 		userGroup.GET("", controllers.GetUsers)
 		userGroup.GET("/:id", middlewares.ValidateToken(), controllers.GetUserByID)
+		userGroup.GET("/balance/:id", middlewares.ValidateToken(), controllers.GetBalance)
 		userGroup.POST("", controllers.CreateUser)
 		userGroup.PATCH("/:id", middlewares.ValidateToken(), controllers.UpdateUser)
 		userGroup.DELETE("/:id", middlewares.ValidateToken(), controllers.DeleteUser)

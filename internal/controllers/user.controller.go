@@ -17,6 +17,18 @@ import (
 	"github.com/ppay/lib"
 )
 
+// @Summary Add User
+// @Description This API endpoint is used to create a new user and their wallet.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param fullname formData string true "Full Name"
+// @Param email formData string true "Email Address"
+// @Param password formData string true "Password"
+// @Param pin formData string true "PIN (6-digit)"
+// @Param phone formData string true "Phone Number"
+// @Success 200 {object} dto.UserSummaryDTO
+// @Router /users [post]
 // Create User and Wallet
 func CreateUser(c *gin.Context) {
 	response := lib.NewResponse(c)
@@ -150,6 +162,19 @@ func CreateUser(c *gin.Context) {
 
 }
 
+// Users godoc
+// @Summary Users
+// @Description  Get All Users
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param search query string false "Search Users"
+// @Param page query int false "Page Users"
+// @Param limit query int false "Limit Users"
+// @Param sort query string false "Sort Users"
+// @Param order query string false "Order Users"
+// @Success 200 {object} lib.Response{data=[]dto.UserSummaryDTO,pageInfo=lib.PageInfo}
+// @Router /users [get]
 // Get All Users
 func GetUsers(c *gin.Context) {
 	response := lib.NewResponse(c)
@@ -263,6 +288,21 @@ func GetUserByID(c *gin.Context) {
 	response.Success("Success get user", userSummary)
 }
 
+// Users godoc
+// @Schemes
+// @Description Update Movies
+// @Tags Users
+// @Accept mpfd
+// @Produce json
+// @Security ApiKeyAuth
+// @Param fullname formData string false "Update Full Name"
+// @Param email formData string false "Update Email"
+// @Param password formData string false "Update Password"
+// @Param pin formData string false "Update Pin"
+// @Param phone formData string false "Update Phone"
+// @Param image formData file false "Update Image"
+// @Success 200 {object} lib.Response{data=dto.UpdateUserRequest}
+// @Router /users/{id} [patch]
 func UpdateUser(c *gin.Context) {
 	response := lib.NewResponse(c)
 	file, _ := c.FormFile("image")

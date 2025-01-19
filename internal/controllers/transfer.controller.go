@@ -12,15 +12,12 @@ import (
 
 func Transfer(c *gin.Context) {
 	var input struct {
-		Amount          float64 `form:"amount" json:"amount" binding:"required"`
+		Amount float64 `form:"amount" json:"amount" binding:"required"`
 	}
 
 	response := lib.NewResponse(c)
 	userId, exists := c.Get("UserId")
 	if !exists {
-
-		// fmt.Println(userId)
-		// fmt.Println(exists)
 		response.Unauthorized("Unauthorized access", nil)
 		return
 	}
@@ -44,11 +41,26 @@ func Transfer(c *gin.Context) {
 		return
 	}
 
+	// Fetch the sender's wallet to check the balance
+	var senderWallet models.Wallet
+	if err := tx.Where("user_id = ?", id).First(&senderWallet).Error; err != nil {
+		tx.Rollback()
+		response.InternalServerError("Failed to retrieve sender's wallet", err.Error())
+		return
+	}
+
+	// Check if sender has enough balance for the transfer
+	if senderWallet.Balance < input.Amount {
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Insufficient balance"})
+		return
+	}
+
 	// Create the main transaction record
 	transaction := models.Transaction{
 		UserID:          uint(id),
 		Amount:          input.Amount,
-		TransactionType: "top_up",
+		TransactionType: "transfer",
 	}
 
 	if err := tx.Create(&transaction).Error; err != nil {
@@ -56,22 +68,21 @@ func Transfer(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create transaction", "details": err.Error()})
 		return
 	}
-	
+
 	targetId, _ := strconv.Atoi(c.Param("id"))
 
-	var userSummary models.User
-	if err := initializers.DB.Model(&models.User{}).
-		Select("image, fullname, phone").
-		Where("id = ? AND is_deleted = ?", id, false).
-		First(&userSummary).Error; err != nil {
-		response.NotFound("User not found", nil)
+	// Fetch the target user to ensure valid recipient
+	var targetUser models.User
+	if err := initializers.DB.Where("id = ? AND is_deleted = false", targetId).First(&targetUser).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusNotFound, gin.H{"error": "Target user not found"})
 		return
 	}
 
-	// Create the top-up transaction record
+	// Create the transfer transaction record
 	transfer := models.TransferTransaction{
-		TransactionID:   transaction.ID,
-		TargetUserID: uint(targetId),
+		TransactionID: transaction.ID,
+		TargetUserID:  uint(targetId),
 	}
 
 	if err := tx.Create(&transfer).Error; err != nil {
@@ -80,23 +91,25 @@ func Transfer(c *gin.Context) {
 		return
 	}
 
-	var wallet models.Wallet
-	wallet.Balance -= input.Amount
-	wallet.UserID = uint(id)
-	
-	if err := tx.Save(&wallet).Error; err != nil {
+	// Update sender's wallet balance
+	senderWallet.Balance -= input.Amount
+	if err := tx.Save(&senderWallet).Error; err != nil {
 		tx.Rollback()
-		response.InternalServerError("Failed to update wallet balance", err.Error())
+		response.InternalServerError("Failed to update sender's wallet balance", err.Error())
 		return
 	}
 
-	var walletTarget models.Wallet
-	walletTarget.Balance += input.Amount
-	walletTarget.UserID = uint(targetId)
-	
-	if err := tx.Save(&walletTarget).Error; err != nil {
+	// Update target user's wallet balance
+	var targetWallet models.Wallet
+	if err := tx.Where("user_id = ?", targetId).First(&targetWallet).Error; err != nil {
 		tx.Rollback()
-		response.InternalServerError("Failed to update wallet balance", err.Error())
+		response.InternalServerError("Failed to retrieve target user's wallet", err.Error())
+		return
+	}
+	targetWallet.Balance += input.Amount
+	if err := tx.Save(&targetWallet).Error; err != nil {
+		tx.Rollback()
+		response.InternalServerError("Failed to update target user's wallet balance", err.Error())
 		return
 	}
 
@@ -107,19 +120,15 @@ func Transfer(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Top-up transaction created successfully",
-		"transaction": map[string]interface{}{
-			"id":         transaction.ID,
-			"userId": userId,
-			"amount":     transaction.Amount,
-			"type":       transaction.TransactionType,
-			"created_at": transaction.CreatedAt,
-			"top_up": map[string]interface{}{
-				"id":             transfer.ID,
-				"targetUserId": targetId,
-				"created_at":     transfer.CreatedAt,
-			},
-		},
+	type ResponseTRF struct {
+		Amount     float64
+		TargetUser int
+		Type       string
+	}
+
+	response.Created("Success transfer", ResponseTRF{
+		Amount:     input.Amount,
+		TargetUser: targetId,
+		Type:       transaction.TransactionType,
 	})
 }
