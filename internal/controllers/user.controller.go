@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -273,7 +275,7 @@ func GetUserByID(c *gin.Context) {
 		response.Unauthorized("Unauthorized", nil)
 		return
 	}
-
+	log.Println(userId)
 	id, ok := userId.(int)
 	if !ok {
 		response.InternalServerError("Failed to parse user ID from token", nil)
@@ -390,6 +392,13 @@ func UpdateUser(c *gin.Context) {
 		allowedExts := []string{".jpg", ".jpeg", ".png"}
 		maxSize := int64(2 << 20) // 2MB
 		uploadDir := "public/images"
+
+		if *user.Image != "" {
+			oldFilePath := *user.Image
+			if err := os.Remove(oldFilePath); err != nil {
+				log.Printf("Failed to delete old profile picture: %s", err)
+			}
+		}
 
 		imagePath, err := lib.UploadImage(c, file, allowedExts, maxSize, uploadDir)
 		if err != nil {
