@@ -32,3 +32,7 @@ type CreatUserDTO struct {
 type ExistingPasswordDTO struct {
 	Password *string `json:"-" form:"exist_password" db:"password"`
 }
+
+type AvailablePinDTO struct {
+	Pin *string `json:"pin" db:"pin"`
+}

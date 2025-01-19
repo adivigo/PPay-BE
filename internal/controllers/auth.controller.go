@@ -231,3 +231,34 @@ func CheckPassword(c *gin.Context) {
 
 	response.Success("Correct password", nil)
 }
+
+// func CheckAvailPin(c *gin.Context) {
+// 	response := lib.NewResponse(c)
+
+// 	userId, exists := c.Get("UserId")
+// 	if !exists {
+// 		response.Unauthorized("Unauthorized", nil)
+// 		return
+// 	}
+// 	id, ok := userId.(int)
+// 	if !ok {
+// 		response.InternalServerError("Failed to parse user ID from token", nil)
+// 		return
+// 	}
+
+// 	// Cari data user berdasarkan ID
+// 	var user models.User
+// 	if err := initializers.DB.First(&user, id).Error; err != nil {
+// 		response.NotFound(fmt.Sprintf("User with ID %d not found", id), nil)
+// 		return
+// 	}
+// 	fmt.Println("Existing User:", user)
+
+// 	var userPin dto.AvailablePinDTO
+// 	if err := initializers.DB.Model(&models.User{}).Select("pin").Where("id = ? AND is_deleted = ?", user.ID, false).First(&userPin).Error; err != nil {
+// 		response.NotFound("User does not have pin", nil)
+// 		return
+// 	}
+
+// 	response.Success("User has pin", nil)
+// }

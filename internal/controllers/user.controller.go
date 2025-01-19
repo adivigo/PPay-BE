@@ -435,6 +435,15 @@ func GetUserByIDParam(userID int) (*models.User, error) {
 	return &user, nil
 }
 
+func GetTargetUserById(c *gin.Context) {
+	response := lib.NewResponse(c)
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	detailsUser, _ := GetUserByIDParam(id)
+
+	response.Success("Details user", detailsUser)
+}
+
 // @Delete User godoc
 // @Summary User
 // @Description Delete User
