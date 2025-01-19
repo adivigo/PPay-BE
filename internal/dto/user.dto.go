@@ -34,5 +34,5 @@ type ExistingPasswordDTO struct {
 }
 
 type AvailablePinDTO struct {
-	Pin *string `json:"pin" db:"pin"`
+	Pin string `json:"pin" db:"pin"`
 }
