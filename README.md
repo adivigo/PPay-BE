@@ -82,10 +82,7 @@ This project worker can follow the steps below:
 
 ### Prerequisites
 
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+* install golang
 
 ### Installation
 
@@ -93,15 +90,15 @@ This project worker can follow the steps below:
    ```sh
    git clone https://github.com/rinaldial11/PPay-BE
    ```
-2. Install NPM packages
+2. Install Golang packages
    ```sh
-   npm install
+   go mod tidy
    ```
 3. create a postgresql database and create a table and enter the data according to the files in the migration/sql folder
 4. please configure in .env
 5. Run
    ```sh
-   npm run dev 
+   go run main.go
    ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
