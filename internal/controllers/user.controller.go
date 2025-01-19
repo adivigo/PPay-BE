@@ -29,6 +29,7 @@ import (
 // @Param phone formData string true "Phone Number"
 // @Success 200 {object} dto.UserSummaryDTO
 // @Router /users [post]
+
 // Create User and Wallet
 func CreateUser(c *gin.Context) {
 	response := lib.NewResponse(c)
@@ -255,6 +256,15 @@ func GetUsers(c *gin.Context) {
 	response.GetAllSuccess("Success get user", users, pageInfo)
 }
 
+// Users godoc
+// @Schemes
+// @Description  Get Profile
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.UserSummaryDTO
+// @Security ApiKeyAuth
+// @Router /users/{id} [get]
 func GetUserByID(c *gin.Context) {
 	response := lib.NewResponse(c)
 
@@ -425,6 +435,15 @@ func GetUserByIDParam(userID int) (*models.User, error) {
 	return &user, nil
 }
 
+// @Delete User godoc
+// @Summary User
+// @Description Delete User
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} map[string]interface{}
+// @Router /users/{id} [delete]
 // Delete User
 func DeleteUser(c *gin.Context) {
 	response := lib.NewResponse(c)

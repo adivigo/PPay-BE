@@ -11,6 +11,11 @@ definitions:
     - email
     - password
     type: object
+  dto.PinDTO:
+    properties:
+      pin:
+        type: string
+    type: object
   dto.RegisterDTO:
     properties:
       email:
@@ -107,6 +112,28 @@ paths:
             $ref: '#/definitions/dto.LoginDTO'
       tags:
       - Auth
+  /auth/pin:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Create Pin Account
+      parameters:
+      - description: Input Pin
+        in: formData
+        name: pin
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.PinDTO'
+      security:
+      - ApiKeyAuth: []
+      tags:
+      - Auth
   /auth/register:
     post:
       consumes:
@@ -177,36 +204,28 @@ paths:
       summary: Users
       tags:
       - Users
-    post:
+  /users/{id}:
+    delete:
       consumes:
       - application/json
-      description: This API endpoint is used to create a new user and their wallet.
-      parameters:
-      - description: Full Name
-        in: formData
-        name: fullname
-        required: true
-        type: string
-      - description: Email Address
-        in: formData
-        name: email
-        required: true
-        type: string
-      - description: Password
-        in: formData
-        name: password
-        required: true
-        type: string
-      - description: PIN (6-digit)
-        in: formData
-        name: pin
-        required: true
-        type: string
-      - description: Phone Number
-        in: formData
-        name: phone
-        required: true
-        type: string
+      description: Delete User
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: User
+      tags:
+      - Users
+    get:
+      consumes:
+      - application/json
+      description: Get Profile
       produces:
       - application/json
       responses:
@@ -214,10 +233,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.UserSummaryDTO'
-      summary: Add User
+      security:
+      - ApiKeyAuth: []
       tags:
       - Users
-  /users/{id}:
     patch:
       consumes:
       - multipart/form-data
