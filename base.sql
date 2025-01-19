@@ -7,7 +7,7 @@ CREATE TABLE users (
   fullname VARCHAR(255) NOT NULL,
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
-  pin CHAR(6),
+  pin VARCHAR(255),
   phone VARCHAR(16) UNIQUE,
   image VARCHAR(255),
   is_deleted BOOLEAN DEFAULT FALSE,
