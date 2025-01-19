@@ -48,7 +48,7 @@ func Register(c *gin.Context) {
 
 	// Buat User
 	var user = models.User{
-		Email:    input.Email,
+		Email:    strings.ToLower(input.Email),
 		Password: input.Password,
 	}
 
@@ -207,7 +207,7 @@ func CheckPassword(c *gin.Context) {
 	fmt.Println("Existing User:", user)
 
 	// Bind input data
-	var req dto.UpdateUserRequest
+	var req dto.ExistingPasswordDTO
 	if err := c.ShouldBind(&req); err != nil {
 		response.BadRequest("Invalid input", err.Error())
 		return
