@@ -140,6 +140,16 @@ func GetUserByPhone(phone string) (*models.User, error) {
 	return &user, nil
 }
 
+// Auth godoc
+// @Schemes
+// @Description Authentication Pin
+// @Tags Auth
+// @Accept x-www-form-urlencoded
+// @Produce json
+// @Security ApiKeyAuth
+// @Param pin formData string true "Input Pin"
+// @Success 201 {object} dto.PinDTO
+// @Router /auth/pin [post]
 func VerifPin(c *gin.Context) {
 	response := lib.NewResponse(c)
 	// Get user ID from context
