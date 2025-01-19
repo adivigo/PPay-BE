@@ -87,7 +87,7 @@ func Transfer(c *gin.Context) {
 
 	if err := tx.Create(&transfer).Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create transfer transaction", "details": err.Error()})
+		response.InternalServerError("Failed to create transfer transaction", err.Error())
 		return
 	}
 
@@ -116,7 +116,7 @@ func Transfer(c *gin.Context) {
 	// Commit the transaction
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to commit database transaction", "details": err.Error()})
+		response.InternalServerError("Failed to commit database transaction", err.Error())
 		return
 	}
 

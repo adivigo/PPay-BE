@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/ppay/internal/initializers"
+	"github.com/ppay/internal/models"
 	"github.com/ppay/lib"
 )
 
@@ -341,4 +342,23 @@ func GetUserExpenses(c *gin.Context) {
 	}
 
 	response.Success("Success get user expenses", expenses)
+}
+
+func GetPaymentMethod(c *gin.Context) {
+	response := lib.NewResponse(c)
+
+	// Query to get expense transactions
+	var paymentMethod []models.PaymentMethod
+	query := `
+        select 
+		id, name, tax 
+		from 
+		payment_methods
+    `
+	if err := initializers.DB.Raw(query).Scan(&paymentMethod).Error; err != nil {
+		response.InternalServerError("Failed to retrieve payment method", err.Error())
+		return
+	}
+
+	response.Success("Success get payment method", paymentMethod)
 }
