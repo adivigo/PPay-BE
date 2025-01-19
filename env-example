@@ -1,0 +1,5 @@
+PORT=8888
+DB_URL="host=172.17.0.3 user=rama password=123 dbname=ppay_db port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+
+SECRET_KEY=PPAY_KEY
+JWT_SECRET=PPAY_KEY
