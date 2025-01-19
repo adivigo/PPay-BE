@@ -28,3 +28,7 @@ type CreatUserDTO struct {
 	Phone    *string `json:"phone" form:"phone" binding:"required"`
 	Image    *string `json:"image"`
 }
+
+type ExistingPasswordDTO struct {
+	Password *string `json:"-" form:"exist_password" db:"password"`
+}
