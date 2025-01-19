@@ -11,16 +11,13 @@ import (
 
 func Topup(c *gin.Context) {
 	var input struct {
-		Amount          float64 `json:"amount" binding:"required"`
-		PaymentMethodID uint    `json:"payment_method_id" binding:"required"`
+		Amount          float64 `json:"amount" form:"amount" binding:"required"`
+		PaymentMethodID int     `json:"payment_method_id" form:"payment_method_id" binding:"required"`
 	}
-	
+
 	response := lib.NewResponse(c)
 	userId, exists := c.Get("UserId")
 	if !exists {
-
-		// fmt.Println(userId)
-		// fmt.Println(exists)
 		response.Unauthorized("Unauthorized access", nil)
 		return
 	}
@@ -69,9 +66,16 @@ func Topup(c *gin.Context) {
 		return
 	}
 
+	// Fetch the user's existing wallet to update its balance
 	var wallet models.Wallet
+	if err := tx.Where("user_id = ?", id).First(&wallet).Error; err != nil {
+		tx.Rollback()
+		response.InternalServerError("Failed to retrieve wallet", err.Error())
+		return
+	}
+
+	// Update the wallet balance
 	wallet.Balance += input.Amount
-	wallet.UserID = uint(id)
 	if err := tx.Save(&wallet).Error; err != nil {
 		tx.Rollback()
 		response.InternalServerError("Failed to update wallet balance", err.Error())
@@ -85,18 +89,13 @@ func Topup(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Top-up transaction created successfully",
-		"transaction": map[string]interface{}{
-			"id":          transaction.ID,
-			"amount":      transaction.Amount,
-			"type":        transaction.TransactionType,
-			"created_at":  transaction.CreatedAt,
-			"top_up": map[string]interface{}{
-				"id":              topUp.ID,
-				"payment_method":  topUp.PaymentMethodID,
-				"created_at":      topUp.CreatedAt,
-			},
-		},
+	type ResponseTopup struct {
+		Amount float64
+		Type   string
+	}
+
+	response.Success("Success Top up", ResponseTopup{
+		Amount: transaction.Amount,
+		Type:   transaction.TransactionType,
 	})
 }

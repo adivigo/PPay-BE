@@ -10,5 +10,6 @@ func RegisterRoutes(router *gin.Engine) {
 	TopupRoute(router)
 	TransferRoute(router)
 	AuthRoutes(router)
+	TransactionRoute(router)
 	ChangePasswordRoutes(router)
 }

@@ -2,8 +2,10 @@ package controllers
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -14,6 +16,19 @@ import (
 	"github.com/ppay/internal/models"
 	"github.com/ppay/lib"
 )
+
+// @Summary Add User
+// @Description This API endpoint is used to create a new user and their wallet.
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param fullname formData string true "Full Name"
+// @Param email formData string true "Email Address"
+// @Param password formData string true "Password"
+// @Param pin formData string true "PIN (6-digit)"
+// @Param phone formData string true "Phone Number"
+// @Success 200 {object} dto.UserSummaryDTO
+// @Router /users [post]
 
 // Create User and Wallet
 func CreateUser(c *gin.Context) {
@@ -148,6 +163,19 @@ func CreateUser(c *gin.Context) {
 
 }
 
+// Users godoc
+// @Summary Users
+// @Description  Get All Users
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param search query string false "Search Users"
+// @Param page query int false "Page Users"
+// @Param limit query int false "Limit Users"
+// @Param sort query string false "Sort Users"
+// @Param order query string false "Order Users"
+// @Success 200 {object} lib.Response{data=[]dto.UserSummaryDTO,pageInfo=lib.PageInfo}
+// @Router /users [get]
 // Get All Users
 func GetUsers(c *gin.Context) {
 	response := lib.NewResponse(c)
@@ -228,6 +256,15 @@ func GetUsers(c *gin.Context) {
 	response.GetAllSuccess("Success get user", users, pageInfo)
 }
 
+// Users godoc
+// @Schemes
+// @Description  Get Profile
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.UserSummaryDTO
+// @Security ApiKeyAuth
+// @Router /users/{id} [get]
 func GetUserByID(c *gin.Context) {
 	response := lib.NewResponse(c)
 
@@ -238,7 +275,7 @@ func GetUserByID(c *gin.Context) {
 		response.Unauthorized("Unauthorized", nil)
 		return
 	}
-
+	log.Println(userId)
 	id, ok := userId.(int)
 	if !ok {
 		response.InternalServerError("Failed to parse user ID from token", nil)
@@ -250,7 +287,7 @@ func GetUserByID(c *gin.Context) {
 
 	// Query only required fields
 	if err := initializers.DB.Model(&models.User{}).
-		Select("email, image, fullname, phone").
+		Select("id, email, image, fullname, phone").
 		Where("id = ? AND is_deleted = ?", id, false).
 		First(&userSummary).Error; err != nil {
 		response.NotFound("User not found", nil)
@@ -261,6 +298,21 @@ func GetUserByID(c *gin.Context) {
 	response.Success("Success get user", userSummary)
 }
 
+// Users godoc
+// @Schemes
+// @Description Update Movies
+// @Tags Users
+// @Accept mpfd
+// @Produce json
+// @Security ApiKeyAuth
+// @Param fullname formData string false "Update Full Name"
+// @Param email formData string false "Update Email"
+// @Param password formData string false "Update Password"
+// @Param pin formData string false "Update Pin"
+// @Param phone formData string false "Update Phone"
+// @Param image formData file false "Update Image"
+// @Success 200 {object} lib.Response{data=dto.UpdateUserRequest}
+// @Router /users/{id} [patch]
 func UpdateUser(c *gin.Context) {
 	response := lib.NewResponse(c)
 	file, _ := c.FormFile("image")
@@ -341,6 +393,13 @@ func UpdateUser(c *gin.Context) {
 		maxSize := int64(2 << 20) // 2MB
 		uploadDir := "public/images"
 
+		if *user.Image != "" {
+			oldFilePath := *user.Image
+			if err := os.Remove(oldFilePath); err != nil {
+				log.Printf("Failed to delete old profile picture: %s", err)
+			}
+		}
+
 		imagePath, err := lib.UploadImage(c, file, allowedExts, maxSize, uploadDir)
 		if err != nil {
 			response.BadRequest("Failed to upload image", err.Error())
@@ -376,6 +435,24 @@ func GetUserByIDParam(userID int) (*models.User, error) {
 	return &user, nil
 }
 
+func GetTargetUserById(c *gin.Context) {
+	response := lib.NewResponse(c)
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	detailsUser, _ := GetUserByIDParam(id)
+
+	response.Success("Details user", detailsUser)
+}
+
+// @Delete User godoc
+// @Summary User
+// @Description Delete User
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Security ApiKeyAuth
+// @Success 200 {object} map[string]interface{}
+// @Router /users/{id} [delete]
 // Delete User
 func DeleteUser(c *gin.Context) {
 	response := lib.NewResponse(c)
